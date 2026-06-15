@@ -45,7 +45,7 @@ try {
   if (dump.status !== 0) {
     throw new Error(`Chrome DOM smoke failed: ${dump.stderr || dump.stdout}`);
   }
-  for (const expected of ['GPT-5.5-style image-to-video meta-prompting MVP', 'Generate English 5-second video prompt', 'Local preview only']) {
+  for (const expected of ['Kanana AI Recipe Card Demo', '데모 레시피 카드 만들기', '데모/샘플 기반 변환']) {
     if (!dump.stdout.includes(expected)) {
       throw new Error(`Rendered DOM missing ${expected}`);
     }

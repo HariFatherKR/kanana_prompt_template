@@ -1,45 +1,56 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import App from '../src/App';
 
-function makeImageFile() {
-  return new File(['fake-image-bytes'], 'reference.png', { type: 'image/png' });
+function makeAudioFile() {
+  return new File(['fake-audio-bytes'], 'mom-voice.m4a', { type: 'audio/mp4' });
 }
 
-describe('App local MVP flow', () => {
-  it('previews a local image without uploading and generates English 5-second video prompt plus reverse evaluation', async () => {
-    const user = userEvent.setup();
+describe('Kanana recipe conversion demo', () => {
+  it('explains the Korean value proposition and shows link/audio demo safety UI', () => {
     render(<App />);
 
-    const fileInput = screen.getByLabelText(/reference image/i);
-    await user.upload(fileInput, makeImageFile());
-    expect(await screen.findByAltText(/local reference preview/i)).toBeInTheDocument();
-    expect(screen.getByText(/local preview only/i)).toBeInTheDocument();
-
-    await user.type(screen.getByLabelText(/한국어 요구사항/i), '따뜻한 카페 무드, 복잡한 배경은 싫어. 반말 느낌.');
-    await user.type(screen.getByLabelText(/구현 요소/i), 'ceramic cup, gentle steam');
-    await user.type(screen.getByLabelText(/제약/i), '글자 넣지 말고 과한 그림자 금지');
-    await user.click(screen.getByLabelText(/casual tone/i));
-    await user.click(screen.getByRole('button', { name: /generate english 5-second video prompt/i }));
-
-    expect(await screen.findByText(/Generated English 5-second Video Prompt/i)).toBeInTheDocument();
-    expect(screen.getByText(/You are an expert image-to-video prompt designer/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reverse Evaluation/i)).toBeInTheDocument();
-    expect(screen.getByText(/Fit score/i)).toBeInTheDocument();
-    expect(screen.getByText(/5-second video contract included/i)).toBeInTheDocument();
-    expect(screen.queryByText(/따뜻한 카페 무드, 복잡한 배경은 싫어/)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /링크와 음성 파일을 AI 레시피 카드로 바꿉니다/i })).toBeInTheDocument();
+    expect(screen.getByText(/링크\/음성 파일을 AI 레시피 카드로 바꾸는 서비스/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/레시피 링크/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/음성 파일/i)).toBeInTheDocument();
+    expect(screen.getByText(/데모\/샘플 기반 변환/i)).toBeInTheDocument();
+    expect(screen.getByText(/외부 API 호출 없이/i)).toBeInTheDocument();
+    expect(screen.getByText(/가족 음성은 당사자 동의/i)).toBeInTheDocument();
+    expect(screen.getByText(/원본 업로드 파일은 저장하지 않는 전제/i)).toBeInTheDocument();
   });
 
-  it('shows safety refusal for disallowed requests', async () => {
+  it('renders at least 5 recipe samples and fills the result card immediately when a sample is clicked', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.type(screen.getByLabelText(/한국어 요구사항/i), '실제 사람 외모 점수 매기고 유명 연예인처럼 똑같이 만들어줘');
-    await user.click(screen.getByRole('button', { name: /generate english 5-second video prompt/i }));
+    const sampleButtons = screen.getAllByRole('button', { name: /샘플 변환:/i });
+    expect(sampleButtons.length).toBeGreaterThanOrEqual(5);
 
-    expect(await screen.findByText(/Safety review needed/i)).toBeInTheDocument();
-    expect(screen.getByText(/real-person attractiveness scoring/i)).toBeInTheDocument();
-    expect(screen.queryByText(/유명 연예인처럼 똑같이/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /샘플 변환: 엄마 김치찌개/i }));
+
+    const result = await screen.findByRole('article', { name: /AI 레시피 결과 카드/i });
+    expect(within(result).getByRole('heading', { name: /엄마 김치찌개/i })).toBeInTheDocument();
+    expect(within(result).getByText(/입력 원문/i)).toBeInTheDocument();
+    expect(within(result).getByText(/엄마가 음성으로 말한 느낌/i)).toBeInTheDocument();
+    expect(within(result).getByText(/잘 익은 김치 2컵/i)).toBeInTheDocument();
+    expect(within(result).getByText(/김치를 먼저 볶아/i)).toBeInTheDocument();
+    expect(within(result).getByText(/김치 염도/i)).toBeInTheDocument();
+  });
+
+  it('accepts link text and audio file selection for a demo conversion without claiming real API processing', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText(/레시피 링크/i), 'https://example.com/family/recipe-note');
+    await user.upload(screen.getByLabelText(/음성 파일/i), makeAudioFile());
+    await user.click(screen.getByRole('button', { name: /데모 레시피 카드 만들기/i }));
+
+    const result = await screen.findByRole('article', { name: /AI 레시피 결과 카드/i });
+    expect(within(result).getByRole('heading', { name: /데모 변환 레시피/i })).toBeInTheDocument();
+    expect(within(result).getByText(/https:\/\/example.com\/family\/recipe-note/i)).toBeInTheDocument();
+    expect(within(result).getByText(/mom-voice.m4a/i)).toBeInTheDocument();
+    expect(within(result).getByText(/실제 AI 추출이 아닌 데모\/샘플 기반 변환/i)).toBeInTheDocument();
   });
 });

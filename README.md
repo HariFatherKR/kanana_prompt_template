@@ -1,16 +1,16 @@
 # Kanana Prompt Template
 
-로컬 브라우저에서 기준 이미지를 미리보고, 한국어 요구사항을 안전하게 정규화해 영어 5초 image-to-video 프롬프트 패키지와 역평가 패널을 만드는 MVP입니다.
+링크나 음성 파일을 넣으면 AI 레시피 카드로 바꿔주는 웹페이지 데모입니다. 현재 구현은 외부 GPT/OpenAI/Kanana/API 호출 없이 샘플 데이터와 로컬 입력값만으로 변환 결과를 보여줍니다.
 
 ## 범위
 
-- 기준 이미지는 브라우저 `objectURL` 로컬 preview로만 사용합니다.
-- 외부 GPT/OpenAI/Kanana/API 호출은 없습니다.
-- 사용자 원문은 그대로 출력 프롬프트에 통과시키지 않고, 템플릿 섹션으로 정규화합니다.
-- 출력 프롬프트는 영어이며 role/system-prompt-like framing, reference/first-frame preservation, 5-second duration, single-shot motion, camera movement, subject motion, composition continuity, must-have, must-not-have, negative prompt를 포함합니다.
-- still-image prompt section은 보조 섹션으로만 유지하고, 주 계약은 `reference image + Korean prompt -> 5-second video prompt package`입니다.
-- reverse evaluation은 5초 영상 적합도 fit score, checklist, gaps, improvement suggestions를 보여줍니다.
-- 실제 사람 외모 점수/순위, 유명인·IP 직접 모방, NSFW, 정치/민감 요청은 차단합니다.
+- 첫 화면에서 “링크/음성 파일을 AI 레시피 카드로 바꾸는 서비스” 가치제안을 한국어로 설명합니다.
+- 레시피 링크 입력과 음성 파일 선택 UI를 제공합니다.
+- 실제 외부 변환 API는 호출하지 않으며, 데모/샘플 기반 변환임을 명확히 표시합니다.
+- 샘플 요리 데이터 6개를 제공합니다: 엄마 김치찌개, 된장찌개, 제육볶음, 감자조림, 계란찜, 닭가슴살 토마토 파스타.
+- 각 샘플은 입력 원문 느낌, 요리명, 재료, 단계, 팁, 확인 필요 항목을 포함합니다.
+- 샘플을 클릭하면 AI 레시피 결과 카드가 즉시 채워집니다.
+- 민감정보, 가족 음성 동의, 원본 업로드 파일 미저장 전제를 안내합니다.
 
 ## 실행
 
@@ -35,9 +35,8 @@ npm run smoke:browser
 
 ## 주요 파일
 
-- `src/App.tsx`: 로컬 이미지 preview, 입력 폼, 5초 영상 프롬프트 출력/평가 UI
-- `src/lib/promptBuilder.ts`: 안전 검수와 영어 image-to-video 프롬프트 생성
-- `src/lib/reverseEvaluation.ts`: prompt/reference/video-contract fit 역평가
-- `src/lib/safety.ts`: 금지 요청 guard
-- `tests/*.test.*`: TDD 계약 테스트
+- `src/App.tsx`: 링크/음성 입력, 샘플 선택, 안전 안내, 레시피 결과 카드 UI
+- `src/lib/recipeDemo.ts`: 샘플 요리 데이터와 데모 변환 빌더
+- `tests/App.test.tsx`: 레시피 데모 화면/상호작용 테스트
+- `tests/recipeDemo.test.ts`: 샘플 데이터 계약 테스트
 - `tests/*-smoke.mjs`: HTTP/브라우저 smoke
